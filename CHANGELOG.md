@@ -5,6 +5,20 @@ All notable changes to the "Open in JavaScript Debug Terminal" extension will be
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2025-01-15
+
+### Fixed
+- **JavaScript Debugger Activation**: Fixed issue where extension would fallback to regular terminal on first use
+- **Lazy Loading Issue**: Extension now properly activates the JavaScript Debugger extension if it hasn't been loaded yet
+- **Multi-workspace Support**: Improved reliability when working with VS Code workspaces containing multiple projects
+- **First-Run Experience**: No longer requires manually opening a debug terminal before the extension works
+
+### Technical Details
+- Added extension activation check for `ms-vscode.js-debug`
+- Implemented dual activation strategy (direct activation + profile trigger)
+- Added initialization delays to ensure proper debugger loading
+- Enhanced logging for better debugging of activation issues
+
 ## [1.1.0] - 2025-01-15
 
 ### Added
