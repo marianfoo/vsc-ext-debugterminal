@@ -33,12 +33,19 @@ A JavaScript Debug Terminal is a special terminal in VS Code that:
 2. Select **"Open in JavaScript Debug Terminal"**
 3. A debug terminal opens in that folder!
 
-### Method 2: Right-click in an editor
-1. Right-click anywhere inside a JavaScript/TypeScript file
+### Method 2: Right-click a file
+1. Right-click any JavaScript/TypeScript file or Node.js config file
 2. Select **"Open in JavaScript Debug Terminal"**  
 3. A debug terminal opens in the file's folder!
 
-### Method 3: Command Palette
+**Supported files**: `.js`, `.ts`, `.jsx`, `.tsx`, `.json`, `package.json`, `package-lock.json`, `yarn.lock`, `tsconfig.json`, `.nvmrc`, `.node-version`
+
+### Method 3: Right-click in an editor
+1. Right-click anywhere inside a supported file
+2. Select **"Open in JavaScript Debug Terminal"**  
+3. A debug terminal opens in the file's folder!
+
+### Method 4: Command Palette
 1. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)
 2. Type "Open in JavaScript Debug Terminal"
 3. Press Enter
@@ -47,6 +54,7 @@ A JavaScript Debug Terminal is a special terminal in VS Code that:
 
 - **🎯 Smart Context Menu**: Right-click folders or files to open debug terminals
 - **📁 Works Everywhere**: Explorer, editor, or command palette
+- **📦 Node.js Focused**: Special support for `package.json`, `yarn.lock`, `tsconfig.json`, and more
 - **🔄 Intelligent Fallbacks**: Always works, even if debug features are unavailable
 - **🌐 Multi-workspace Support**: Works with multiple workspace folders
 - **⚡ Zero Configuration**: No setup required - just install and use!

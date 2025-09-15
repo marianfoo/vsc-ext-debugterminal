@@ -33,7 +33,10 @@
     "right-click",
     "debugging",
     "development",
-    "js-debug"
+    "js-debug",
+    "package.json",
+    "npm",
+    "yarn"
   ],
   "activationEvents": [
     "onCommand:openJsDebugTerminalHere.open"
@@ -53,14 +56,14 @@
         {
           "command": "openJsDebugTerminalHere.open",
           "group": "navigation@11",
-          "when": "explorerResourceIsFolder || resourceExtname =~ /\\.(js|cjs|mjs|ts|jsx|tsx|json)$/"
+          "when": "explorerResourceIsFolder || resourceExtname =~ /\\.(js|cjs|mjs|ts|jsx|tsx|json)$/ || resourceFilename =~ /(package\\.json|package-lock\\.json|yarn\\.lock|tsconfig\\.json|\\.nvmrc|\\.node-version)$/"
         }
       ],
       "editor/context": [
         {
           "command": "openJsDebugTerminalHere.open",
           "group": "navigation@11",
-          "when": "resourceExtname =~ /\\.(js|cjs|mjs|ts|jsx|tsx|json)$/ || editorLangId == 'javascript' || editorLangId == 'typescript' || editorLangId == 'json'"
+          "when": "resourceExtname =~ /\\.(js|cjs|mjs|ts|jsx|tsx|json)$/ || resourceFilename =~ /(package\\.json|package-lock\\.json|yarn\\.lock|tsconfig\\.json|\\.nvmrc|\\.node-version)$/ || editorLangId == 'javascript' || editorLangId == 'typescript' || editorLangId == 'json'"
         }
       ],
       "commandPalette": [
