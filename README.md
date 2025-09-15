@@ -5,6 +5,14 @@ A simple VS Code extension that adds a **"Open in JavaScript Debug Terminal"** o
 ![Extension Demo](https://img.shields.io/badge/VS%20Code-Extension-blue?style=for-the-badge&logo=visual-studio-code)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
+## Marketplaces
+
+- [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=MarianZeis.open-js-debug-terminal)
+- [Open VSX Registry](https://open-vsx.org/extension/MarianZeis/open-js-debug-terminal)
+
+## GitHub Repository
+- [GitHub Repository](https://github.com/marianfoo/vsc-ext-debugterminal)
+
 ## ✨ What does this extension do?
 
 This extension adds a convenient right-click option that opens a **JavaScript Debug Terminal** in any folder or file location you choose. The debug terminal is specially designed for JavaScript/TypeScript development and debugging.
