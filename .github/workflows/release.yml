@@ -56,7 +56,7 @@ jobs:
             1. Download the `.vsix` file from assets below
             2. Install via VS Code: `code --install-extension <filename>.vsix`
             
-            Or install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=MarianZeis.open-js-debug-terminal-here)
+            Or install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=MarianZeis.open-js-debug-terminal)
           draft: false
           prerelease: false
           
