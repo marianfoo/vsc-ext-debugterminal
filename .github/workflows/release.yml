@@ -1,0 +1,126 @@
+name: Release Extension
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags like v1.0.0
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  release:
+    name: Package and Release Extension
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Compile TypeScript
+        run: npm run compile
+        
+      - name: Run tests (if any)
+        run: npm test
+        
+      - name: Package extension
+        run: npm run package
+        
+      - name: Upload VSIX as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-vsix
+          path: '*.vsix'
+          
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body: |
+            ## Release Notes
+            
+            See [CHANGELOG.md](./CHANGELOG.md) for detailed changes.
+            
+            ## Installation
+            
+            1. Download the `.vsix` file from assets below
+            2. Install via VS Code: `code --install-extension <filename>.vsix`
+            
+            Or install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=MarianZeis.open-js-debug-terminal-here)
+          draft: false
+          prerelease: false
+          
+      - name: Attach VSIX to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./open-js-debug-terminal-*.vsix
+          asset_name: open-js-debug-terminal.vsix
+          asset_content_type: application/zip
+
+  publish-vscode:
+    name: Publish to VS Code Marketplace
+    needs: release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Compile TypeScript
+        run: npm run compile
+        
+      - name: Publish to VS Code Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: npx @vscode/vsce publish --no-dependencies
+        
+  publish-openvsx:
+    name: Publish to Open VSX
+    needs: release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Compile TypeScript
+        run: npm run compile
+        
+      - name: Publish to Open VSX
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: |
+          npx ovsx publish --no-dependencies

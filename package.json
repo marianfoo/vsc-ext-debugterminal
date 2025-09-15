@@ -1,0 +1,101 @@
+{
+  "name": "open-js-debug-terminal",
+  "displayName": "Open in JavaScript Debug Terminal",
+  "description": "Right-click any folder or file to open a JavaScript Debug Terminal. Perfect for Node.js development and debugging!",
+  "version": "1.0.0",
+  "publisher": "MarianZeis",
+  "license": "MIT",
+  "icon": "images/icon.png",
+  "homepage": "https://github.com/marianfoo/vsc-ext-debugterminal#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marianfoo/vsc-ext-debugterminal.git"
+  },
+  "bugs": {
+    "url": "https://github.com/marianfoo/vsc-ext-debugterminal/issues"
+  },
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Debuggers",
+    "Other"
+  ],
+  "keywords": [
+    "javascript",
+    "typescript",
+    "debug",
+    "terminal",
+    "nodejs",
+    "node",
+    "explorer",
+    "context-menu",
+    "right-click",
+    "debugging",
+    "development",
+    "js-debug"
+  ],
+  "activationEvents": [
+    "onCommand:openJsDebugTerminalHere.open"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "openJsDebugTerminalHere.open",
+        "title": "Open in JavaScript Debug Terminal",
+        "category": "Terminal",
+        "icon": "$(terminal)"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "openJsDebugTerminalHere.open",
+          "group": "navigation@11",
+          "when": "explorerResourceIsFolder || resourceExtname =~ /\\.(js|cjs|mjs|ts|jsx|tsx|json)$/"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "openJsDebugTerminalHere.open",
+          "group": "navigation@11",
+          "when": "resourceExtname =~ /\\.(js|cjs|mjs|ts|jsx|tsx|json)$/ || editorLangId == 'javascript' || editorLangId == 'typescript' || editorLangId == 'json'"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "openJsDebugTerminalHere.open",
+          "when": "workspaceFolderCount > 0"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p .",
+    "watch": "tsc -watch -p .",
+    "pretest": "npm run compile",
+    "test": "echo \"No tests specified\" && exit 0",
+    "package": "vsce package",
+    "publish": "vsce publish",
+    "clean": "rm -rf out"
+  },
+  "devDependencies": {
+    "@types/node": "^24.4.0",
+    "@types/vscode": "^1.74.0",
+    "@vscode/vsce": "^3.0.0",
+    "typescript": "^5.4.0"
+  },
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "badges": [
+    {
+      "url": "https://img.shields.io/badge/VS%20Code-Extension-blue?style=flat-square&logo=visual-studio-code",
+      "href": "https://marketplace.visualstudio.com/items?itemName=MarianZeis.open-js-debug-terminal",
+      "description": "VS Code Extension"
+    }
+  ]
+}
