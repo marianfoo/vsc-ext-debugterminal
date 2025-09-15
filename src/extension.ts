@@ -7,9 +7,10 @@ import * as path from 'path';
  * some VS Code features are not available.
  * 
  * Fallback Strategy:
- * 1. Try the built-in JS Debug command (most reliable)
- * 2. Try the JavaScript Debug Terminal profile (good alternative)
- * 3. Fall back to a regular terminal (always works)
+ * 1. Activate the JavaScript Debugger extension if needed
+ * 2. Try the built-in JS Debug command (most reliable)
+ * 3. Try the JavaScript Debug Terminal profile (good alternative)
+ * 4. Fall back to a regular terminal (always works)
  * 
  * @param cwdUri - The URI of the directory where the terminal should open.
  *                 If undefined, uses VS Code's default terminal directory.
@@ -17,6 +18,36 @@ import * as path from 'path';
 async function openJsDebugTerminalWithCwd(cwdUri?: vscode.Uri) {
   // The official command provided by VS Code's built-in JavaScript Debugger
   const officialJsDebugCommand = 'extension.js-debug.createDebuggerTerminal';
+  
+  // Pre-step: Ensure JavaScript Debugger extension is activated
+  // This is crucial because the extension is lazy-loaded and may not be available initially
+  try {
+    console.log('[Debug Terminal] Ensuring JavaScript Debugger extension is activated...');
+    
+    // Method 1: Try to get and activate the JS Debug extension directly
+    const jsDebugExtension = vscode.extensions.getExtension('ms-vscode.js-debug');
+    
+    if (jsDebugExtension && !jsDebugExtension.isActive) {
+      console.log('[Debug Terminal] Activating JavaScript Debugger extension directly...');
+      await jsDebugExtension.activate();
+      
+      // Give it a moment to fully initialize
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    // Method 2: Alternative activation by trying to access terminal profiles
+    // This can trigger the debugger extension to load if it hasn't already
+    try {
+      await vscode.commands.executeCommand('workbench.action.terminal.showProfiles');
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } catch {
+      // Ignore - this is just an attempt to trigger activation
+    }
+    
+  } catch (error) {
+    console.log('[Debug Terminal] Could not activate JS Debug extension:', error);
+    // Continue anyway - might still work
+  }
   
   // Strategy 1: Try to use the official JS Debug command
   // This is the most reliable method when available
