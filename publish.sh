@@ -40,6 +40,14 @@ check_dependencies() {
         exit 1
     fi
     
+    # Check Node.js version (require 20+)
+    NODE_VERSION=$(node -v | sed 's/v//' | cut -d. -f1)
+    if [ "$NODE_VERSION" -lt 20 ]; then
+        print_error "Node.js 20+ is required (current: $(node -v))"
+        print_error "Please update Node.js: https://nodejs.org/"
+        exit 1
+    fi
+    
     if ! command -v npm &> /dev/null; then
         print_error "npm is not installed"
         exit 1

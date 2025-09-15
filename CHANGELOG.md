@@ -5,7 +5,24 @@ All notable changes to the "Open in JavaScript Debug Terminal" extension will be
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2025-01-XX
+## [1.1.0] - 2025-01-15
+
+### Added
+- **Enhanced File Support**: Now explicitly supports Node.js configuration files:
+  - `package.json` - Right-click to open debug terminal in project root
+  - `package-lock.json` - NPM lock file support
+  - `yarn.lock` - Yarn lock file support  
+  - `tsconfig.json` - TypeScript configuration support
+  - `.nvmrc` - Node version manager files
+  - `.node-version` - Node version files
+- **Improved Keywords**: Better discoverability with `package.json`, `npm`, `yarn` keywords
+
+### Technical Details
+- Enhanced VS Code menu conditions with explicit filename matching
+- Better support for Node.js development workflows
+- Maintained backward compatibility with all existing functionality
+
+## [1.0.0] - 2025-01-15
 
 ### Added
 - 🎯 **Explorer Context Menu**: Right-click any folder or JavaScript/TypeScript file in Explorer to open a debug terminal

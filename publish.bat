@@ -16,6 +16,15 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
+REM Check Node.js version (require 20+)
+for /f "tokens=1 delims=v." %%a in ('node --version') do set NODE_MAJOR=%%a
+if %NODE_MAJOR% LSS 20 (
+    echo ❌ Node.js 20+ is required (current: node --version)
+    echo Please update Node.js: https://nodejs.org/
+    pause
+    exit /b 1
+)
+
 REM Check if npm is installed
 npm --version >nul 2>&1
 if %errorlevel% neq 0 (

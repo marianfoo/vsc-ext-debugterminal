@@ -5,6 +5,12 @@ on:
     tags:
       - 'v*'  # Trigger on version tags like v1.0.0
   workflow_dispatch:  # Allow manual triggering
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.1.0)'
+        required: true
+        default: 'v1.1.0'
+        type: string
 
 jobs:
   release:
@@ -12,13 +18,26 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Determine release version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_type }}" == "tag" ]]; then
+            # Triggered by tag push
+            echo "VERSION=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            # Triggered manually
+            echo "VERSION=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=v1.1.0" >> $GITHUB_OUTPUT
+          fi
+      
       - name: Checkout repository
         uses: actions/checkout@v4
         
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           
       - name: Install dependencies
@@ -40,12 +59,10 @@ jobs:
           path: '*.vsix'
           
       - name: Create GitHub Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          name: Release ${{ steps.version.outputs.VERSION }}
           body: |
             ## Release Notes
             
@@ -57,24 +74,16 @@ jobs:
             2. Install via VS Code: `code --install-extension <filename>.vsix`
             
             Or install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=MarianZeis.open-js-debug-terminal)
+          files: |
+            open-js-debug-terminal-*.vsix
           draft: false
           prerelease: false
-          
-      - name: Attach VSIX to release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./open-js-debug-terminal-*.vsix
-          asset_name: open-js-debug-terminal.vsix
-          asset_content_type: application/zip
 
   publish-vscode:
     name: Publish to VS Code Marketplace
     needs: release
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     
     steps:
       - name: Checkout repository
@@ -83,7 +92,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           
       - name: Install dependencies
@@ -101,7 +110,7 @@ jobs:
     name: Publish to Open VSX
     needs: release
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     
     steps:
       - name: Checkout repository
@@ -110,7 +119,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           
       - name: Install dependencies

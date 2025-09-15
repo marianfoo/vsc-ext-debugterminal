@@ -65,6 +65,14 @@ A JavaScript Debug Terminal is a special terminal in VS Code that:
 - **Operating System**: Windows, macOS, or Linux
 - **JavaScript Debugger**: Built into VS Code (no additional installation needed)
 
+## 👩‍💻 For Developers
+
+### System Requirements
+
+- **Node.js**: Version 20+ (required for building and publishing)
+- **npm**: Usually comes with Node.js
+- **Git**: For version control
+
 ## 🏃‍♂️ Quick Start Example
 
 1. Install the extension
