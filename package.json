@@ -2,7 +2,7 @@
   "name": "open-js-debug-terminal",
   "displayName": "Open in JavaScript Debug Terminal",
   "description": "Right-click any folder or file to open a JavaScript Debug Terminal. Perfect for Node.js development and debugging!",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "publisher": "MarianZeis",
   "license": "MIT",
   "icon": "images/icon.png",
