@@ -5,6 +5,40 @@ All notable changes to the "Open in JavaScript Debug Terminal" extension will be
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-09-29
+
+### Added
+- **🚀 Dual CodeLens Integration**: Adds TWO links above each npm script in `package.json`
+  - **"▶ Run in Terminal"** - Runs in a new, dedicated regular terminal
+  - **"🐛 Debug Script"** - Runs in a JavaScript Debug Terminal with full debugging capabilities
+  - No more reused task terminals - each script gets its own terminal!
+  - Alternative to VS Code's native "Run Script" that uses the task system
+- **⚙️ Disable Native Hover Setting**: New option to hide VS Code's built-in "Run Script" / "Debug Script" hover
+  - Setting: `openJsDebugTerminalHere.disableNativeNpmScriptHover`
+  - Automatically sets `npm.scriptHover` to `false` when enabled
+  - Use only the extension's CodeLens links instead of native hover
+- **⌨️ Keyboard Shortcut**: Press `Cmd+Shift+R` (Mac) or `Ctrl+Shift+R` (Windows/Linux) on any script line
+- **🎯 Smart Script Detection**: Automatically detects npm script lines in package.json
+- **🔍 Script Section Validation**: Only shows CodeLens in the "scripts" section
+
+### Improved
+- Solves the problem of VS Code's native "Run Script" reusing terminals
+- Each npm script now runs in its own dedicated terminal (proper terminal, not task terminal)
+- Clean terminal experience without task system interference
+- Choice between regular terminal and debug terminal for each script
+- CodeLens links are always visible (no hovering required!)
+
+### Technical Details
+- New `NpmScriptCodeLensProvider` class provides inline dual-action CodeLens
+- Enhanced command: `openJsDebugTerminalHere.runNpmScriptByName` supports both regular and debug modes
+- New command: `openJsDebugTerminalHere.runNpmScript` for keyboard shortcut
+- New configuration: `openJsDebugTerminalHere.disableNativeNpmScriptHover`
+- Automatic `npm.scriptHover` management based on user preference
+- CodeLens activation on `onLanguage:json` for package.json files
+- Creates regular terminals with `vscode.window.createTerminal()` (not task)
+- Debug mode uses `openJsDebugTerminalWithCwd()` for full debugging support
+- Compatible with all existing extension features
+
 ## [1.1.1] - 2025-01-15
 
 ### Fixed

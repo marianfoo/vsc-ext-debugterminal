@@ -58,9 +58,43 @@ A JavaScript Debug Terminal is a special terminal in VS Code that:
 2. Type "Open in JavaScript Debug Terminal"
 3. Press Enter
 
+### Method 5: Run npm Scripts in Proper Terminals 🆕
+Stop dealing with reused task terminals! This extension adds **CodeLens links** above each npm script in `package.json`:
+
+1. Open your `package.json` file
+2. You'll see two links above each script line:
+   - **"▶ Run in Terminal"** - Runs in a new regular terminal
+   - **"🐛 Debug Script"** - Runs in a JavaScript Debug Terminal
+3. Click either link to run the script!
+
+**Alternative: Use Keyboard Shortcut**
+- Place cursor on any script line
+- Press `Cmd+Shift+R` (Mac) or `Ctrl+Shift+R` (Windows/Linux)
+- Runs in a JavaScript Debug Terminal
+
+**Why is this better than the native "Run Script" hover?**
+- ✅ Each script gets its own terminal (no reused task terminals!)
+- ✅ Clean, dedicated terminal for each run
+- ✅ Choose between regular terminal or debug terminal
+- ✅ No more dealing with the task system's terminal reuse
+- ✅ Always visible - no need to hover!
+
+**Optional: Disable Native Hover**
+If you want to completely hide VS Code's native "Run Script" / "Debug Script" hover:
+1. Open Settings (`Cmd+,` or `Ctrl+,`)
+2. Search for: `openJsDebugTerminalHere.disableNativeNpmScriptHover`
+3. Enable the checkbox
+4. Reload VS Code
+
+This will use only your extension's CodeLens links instead of the native hover actions.
+
 ## 🛠️ Features
 
 - **🎯 Smart Context Menu**: Right-click folders or files to open debug terminals
+- **⚡ npm Script Runner**: Run npm scripts in proper terminals (not reused task terminals!)
+- **📝 CodeLens Integration**: Adds "▶ Run in Terminal" and "🐛 Debug Script" links above each npm script
+- **⚙️ Disable Native Hover**: Optional setting to hide VS Code's default "Run Script" hover
+- **⌨️ Keyboard Shortcuts**: Quick access with `Cmd+Shift+R` / `Ctrl+Shift+R` in package.json
 - **📁 Works Everywhere**: Explorer, editor, or command palette
 - **📦 Node.js Focused**: Special support for `package.json`, `yarn.lock`, `tsconfig.json`, and more
 - **🔄 Intelligent Fallbacks**: Always works, even if debug features are unavailable
@@ -113,6 +147,17 @@ This ensures the extension always works, regardless of your VS Code configuratio
 ### The command doesn't work from the Command Palette
 - Make sure you have a folder open in VS Code
 - Try opening a file or folder first, then run the command
+
+### I don't see the CodeLens links above my npm scripts
+- Make sure you're viewing a `package.json` file
+- Check that the file has a `"scripts"` section
+- Try reloading VS Code (`Cmd+Shift+P` → "Reload Window")
+- CodeLens may be disabled globally - check setting: `editor.codeLens`
+
+### I see both native hover AND CodeLens (too cluttered!)
+- Enable the setting to hide native hover: `openJsDebugTerminalHere.disableNativeNpmScriptHover`
+- This will use only the extension's CodeLens links
+- You'll need to reload VS Code after changing this setting
 
 ## 🤝 Support
 

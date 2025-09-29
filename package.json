@@ -1,8 +1,8 @@
 {
   "name": "open-js-debug-terminal",
   "displayName": "Open in JavaScript Debug Terminal",
-  "description": "Right-click any folder or file to open a JavaScript Debug Terminal. Perfect for Node.js development and debugging!",
-  "version": "1.1.1",
+  "description": "Run npm scripts in proper terminals (not reused task terminals!) + Right-click any folder or file to open a JavaScript Debug Terminal. Perfect for Node.js development!",
+  "version": "1.2.0",
   "publisher": "MarianZeis",
   "license": "MIT",
   "icon": "images/icon.png",
@@ -39,7 +39,9 @@
     "yarn"
   ],
   "activationEvents": [
-    "onCommand:openJsDebugTerminalHere.open"
+    "onCommand:openJsDebugTerminalHere.open",
+    "onCommand:openJsDebugTerminalHere.runNpmScript",
+    "onLanguage:json"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -49,6 +51,17 @@
         "title": "Open in JavaScript Debug Terminal",
         "category": "Terminal",
         "icon": "$(terminal)"
+      },
+      {
+        "command": "openJsDebugTerminalHere.runNpmScript",
+        "title": "Run npm Script in Debug Terminal",
+        "category": "Terminal",
+        "icon": "$(debug-alt)"
+      },
+      {
+        "command": "openJsDebugTerminalHere.runNpmScriptByName",
+        "title": "Run npm Script in Terminal",
+        "category": "Terminal"
       }
     ],
     "menus": {
@@ -70,8 +83,30 @@
         {
           "command": "openJsDebugTerminalHere.open",
           "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "openJsDebugTerminalHere.runNpmScript",
+          "when": "resourceFilename == package.json"
         }
       ]
+    },
+    "keybindings": [
+      {
+        "command": "openJsDebugTerminalHere.runNpmScript",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r",
+        "when": "resourceFilename == package.json && editorTextFocus"
+      }
+    ],
+    "configuration": {
+      "title": "Open in JavaScript Debug Terminal",
+      "properties": {
+        "openJsDebugTerminalHere.disableNativeNpmScriptHover": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Disable VS Code's native 'Run Script' and 'Debug Script' hover actions in package.json. When enabled, sets `npm.scriptHover` to `false`. Reload VS Code after changing this setting."
+        }
+      }
     }
   },
   "scripts": {

@@ -1,8 +1,104 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
 
 /**
- * Opens a JavaScript Debug Terminal in the specified directory.
+ * CodeLens provider for npm scripts in package.json.
+ * This provides "Run in Terminal" links above each npm script,
+ * offering an alternative to the native "Run Script" that uses task terminals.
+ */
+class NpmScriptCodeLensProvider implements vscode.CodeLensProvider {
+  private _onDidChangeCodeLenses: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
+  public readonly onDidChangeCodeLenses: vscode.Event<void> = this._onDidChangeCodeLenses.event;
+
+  /**
+   * Provides CodeLens items for npm scripts in package.json
+   */
+  public provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
+    // Only process package.json files
+    if (path.basename(document.fileName) !== 'package.json') {
+      return [];
+    }
+
+    const codeLenses: vscode.CodeLens[] = [];
+    const text = document.getText();
+
+    try {
+      const packageJson = JSON.parse(text);
+      
+      if (!packageJson.scripts || typeof packageJson.scripts !== 'object') {
+        return [];
+      }
+
+      // Parse the document to find script line positions
+      const lines = text.split('\n');
+      let inScriptsSection = false;
+      let scriptsSectionStartLine = -1;
+
+      for (let lineNum = 0; lineNum < lines.length; lineNum++) {
+        const line = lines[lineNum];
+        
+        // Detect when we enter the scripts section
+        if (line.match(/^\s*"scripts"\s*:\s*\{/)) {
+          inScriptsSection = true;
+          scriptsSectionStartLine = lineNum;
+          continue;
+        }
+
+        // Detect when we exit the scripts section
+        if (inScriptsSection && line.match(/^\s*\}/)) {
+          inScriptsSection = false;
+          continue;
+        }
+
+        // If we're in the scripts section, look for script definitions
+        if (inScriptsSection) {
+          const scriptMatch = line.match(/^\s*"([^"]+)"\s*:\s*"([^"]+)"/);
+          
+          if (scriptMatch) {
+            const scriptName = scriptMatch[1];
+            const scriptCommand = scriptMatch[2];
+            
+            // Create a range for the script line
+            const range = new vscode.Range(lineNum, 0, lineNum, line.length);
+            
+            // Create "Run in Terminal" CodeLens
+            const runCodeLens = new vscode.CodeLens(range, {
+              title: '▶ Run in Terminal',
+              tooltip: `Run "${scriptName}" in a new terminal`,
+              command: 'openJsDebugTerminalHere.runNpmScriptByName',
+              arguments: [document.uri, scriptName, scriptCommand, false]
+            });
+            
+            codeLenses.push(runCodeLens);
+            
+            // Create "Debug Script" CodeLens
+            const debugCodeLens = new vscode.CodeLens(range, {
+              title: '$(debug-alt) Debug Script',
+              tooltip: `Debug "${scriptName}" in a JavaScript Debug Terminal`,
+              command: 'openJsDebugTerminalHere.runNpmScriptByName',
+              arguments: [document.uri, scriptName, scriptCommand, true]
+            });
+            
+            codeLenses.push(debugCodeLens);
+          }
+        }
+      }
+    } catch (error) {
+      console.log('[CodeLens] Failed to parse package.json:', error);
+      return [];
+    }
+
+    return codeLenses;
+  }
+
+  public refresh(): void {
+    this._onDidChangeCodeLenses.fire();
+  }
+}
+
+/**
+ * Opens a JavaScript Debug Terminal in the specified directory and optionally runs a command.
  * This function implements a fallback strategy to ensure the terminal opens even if
  * some VS Code features are not available.
  * 
@@ -14,8 +110,9 @@ import * as path from 'path';
  * 
  * @param cwdUri - The URI of the directory where the terminal should open.
  *                 If undefined, uses VS Code's default terminal directory.
+ * @param command - Optional command to run in the terminal after opening.
  */
-async function openJsDebugTerminalWithCwd(cwdUri?: vscode.Uri) {
+async function openJsDebugTerminalWithCwd(cwdUri?: vscode.Uri, command?: string) {
   // The official command provided by VS Code's built-in JavaScript Debugger
   const officialJsDebugCommand = 'extension.js-debug.createDebuggerTerminal';
   
@@ -106,6 +203,11 @@ async function openJsDebugTerminalWithCwd(cwdUri?: vscode.Uri) {
   
   console.log('[Debug Terminal] Successfully created fallback terminal');
   
+  // If a command was provided, send it to the terminal
+  if (command) {
+    terminal.sendText(command);
+  }
+  
   // Inform user about the fallback
   vscode.window.showInformationMessage(
     'Opened regular terminal (JavaScript Debug features not available)'
@@ -154,8 +256,54 @@ function getParentDirectoryUri(uri: vscode.Uri): vscode.Uri {
  * 
  * @param context - Contains methods and properties for the extension lifecycle
  */
+/**
+ * Monitors the extension setting for disabling native npm script hover
+ * and applies it to VS Code's npm.scriptHover setting.
+ */
+function setupNpmScriptHoverControl(context: vscode.ExtensionContext) {
+  // Apply setting on activation
+  const applyNpmScriptHoverSetting = async () => {
+    const config = vscode.workspace.getConfiguration('openJsDebugTerminalHere');
+    const disableNativeHover = config.get<boolean>('disableNativeNpmScriptHover', false);
+    
+    if (disableNativeHover) {
+      const npmConfig = vscode.workspace.getConfiguration('npm');
+      const currentScriptHover = npmConfig.get<boolean>('scriptHover');
+      
+      if (currentScriptHover !== false) {
+        // Update the setting to disable native hover
+        await npmConfig.update('scriptHover', false, vscode.ConfigurationTarget.Global);
+        console.log('[Debug Terminal Extension] Disabled native npm script hover');
+      }
+    }
+  };
+  
+  // Apply on activation
+  applyNpmScriptHoverSetting();
+  
+  // Watch for changes to the setting
+  const configWatcher = vscode.workspace.onDidChangeConfiguration(event => {
+    if (event.affectsConfiguration('openJsDebugTerminalHere.disableNativeNpmScriptHover')) {
+      applyNpmScriptHoverSetting();
+      vscode.window.showInformationMessage(
+        'npm script hover setting updated. Reload VS Code for changes to take effect.',
+        'Reload'
+      ).then(selection => {
+        if (selection === 'Reload') {
+          vscode.commands.executeCommand('workbench.action.reloadWindow');
+        }
+      });
+    }
+  });
+  
+  context.subscriptions.push(configWatcher);
+}
+
 export function activate(context: vscode.ExtensionContext) {
   console.log('[Debug Terminal Extension] Activating extension...');
+  
+  // Setup npm script hover control
+  setupNpmScriptHoverControl(context);
   
   // Register our main command that users will invoke
   const commandDisposable = vscode.commands.registerCommand(
@@ -188,6 +336,85 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Register the command with VS Code so it gets cleaned up when extension is deactivated
   context.subscriptions.push(commandDisposable);
+  
+  // Register the npm script runner command
+  const runNpmScriptDisposable = vscode.commands.registerCommand(
+    'openJsDebugTerminalHere.runNpmScript',
+    async () => {
+      console.log('[Debug Terminal Extension] Run npm script command executed');
+      
+      try {
+        await runNpmScriptInDebugTerminal();
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error('[Debug Terminal Extension] Error running npm script:', error);
+        
+        vscode.window.showErrorMessage(
+          `Failed to run npm script: ${errorMessage}`
+        );
+      }
+    }
+  );
+  
+  context.subscriptions.push(runNpmScriptDisposable);
+  
+  // Register the npm script runner by name command (for CodeLens)
+  const runNpmScriptByNameDisposable = vscode.commands.registerCommand(
+    'openJsDebugTerminalHere.runNpmScriptByName',
+    async (documentUri: vscode.Uri, scriptName: string, scriptCommand: string, useDebugTerminal: boolean = false) => {
+      console.log('[Debug Terminal Extension] Run npm script by name:', scriptName, 'debug:', useDebugTerminal);
+      
+      try {
+        // Get the directory containing package.json
+        const packageDir = getParentDirectoryUri(documentUri);
+        
+        if (useDebugTerminal) {
+          // Open a JavaScript Debug Terminal and run the script
+          await openJsDebugTerminalWithCwd(packageDir);
+          
+          // Give the terminal a moment to initialize
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Send the npm run command to the terminal
+          const terminal = vscode.window.activeTerminal;
+          if (terminal) {
+            terminal.sendText(`npm run ${scriptName}`);
+            console.log('[Debug Terminal Extension] Running script in debug terminal');
+          }
+        } else {
+          // Create a regular terminal (not debug, not task) in the package directory
+          const terminal = vscode.window.createTerminal({
+            name: `npm: ${scriptName}`,
+            cwd: packageDir.fsPath
+          });
+          
+          // Show and run the script
+          terminal.show();
+          terminal.sendText(`npm run ${scriptName}`);
+          
+          console.log('[Debug Terminal Extension] Running script in new terminal');
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error('[Debug Terminal Extension] Error running npm script by name:', error);
+        
+        vscode.window.showErrorMessage(
+          `Failed to run npm script: ${errorMessage}`
+        );
+      }
+    }
+  );
+  
+  context.subscriptions.push(runNpmScriptByNameDisposable);
+  
+  // Register CodeLens provider for package.json files
+  const codeLensProvider = new NpmScriptCodeLensProvider();
+  const codeLensDisposable = vscode.languages.registerCodeLensProvider(
+    { pattern: '**/package.json' },
+    codeLensProvider
+  );
+  
+  context.subscriptions.push(codeLensDisposable);
   
   console.log('[Debug Terminal Extension] Extension activated successfully');
 }
@@ -240,6 +467,76 @@ async function determineTargetDirectory(contextResource?: vscode.Uri): Promise<v
   // No suitable directory found
   console.log('[Debug Terminal Extension] No suitable directory found');
   throw new Error('No workspace folder or active file found. Please open a folder or file first.');
+}
+
+/**
+ * Extracts and runs an npm script from the current line in package.json.
+ * This function detects if the user is on a script line, extracts the script name,
+ * and runs it in a JavaScript Debug Terminal.
+ */
+async function runNpmScriptInDebugTerminal() {
+  const editor = vscode.window.activeTextEditor;
+  
+  if (!editor) {
+    throw new Error('No active editor found');
+  }
+  
+  const document = editor.document;
+  
+  // Check if we're in a package.json file
+  if (path.basename(document.fileName) !== 'package.json') {
+    throw new Error('This command only works in package.json files');
+  }
+  
+  // Get the current line
+  const currentLine = editor.selection.active.line;
+  const lineText = document.lineAt(currentLine).text;
+  
+  console.log('[Debug Terminal Extension] Current line:', lineText);
+  
+  // Try to extract script name from the current line
+  // Pattern: "scriptName": "command"
+  const scriptMatch = lineText.match(/^\s*"([^"]+)"\s*:\s*"([^"]+)"/);
+  
+  if (!scriptMatch) {
+    throw new Error('Current line does not appear to be an npm script. Place your cursor on a script line.');
+  }
+  
+  const scriptName = scriptMatch[1];
+  const scriptCommand = scriptMatch[2];
+  
+  console.log('[Debug Terminal Extension] Found script:', scriptName, '→', scriptCommand);
+  
+  // Verify we're in the "scripts" section by checking the JSON structure
+  const text = document.getText();
+  const cursorOffset = document.offsetAt(editor.selection.active);
+  
+  // Find the nearest enclosing object key before the cursor
+  const textBeforeCursor = text.substring(0, cursorOffset);
+  const lastSectionMatch = textBeforeCursor.match(/"(\w+)"\s*:\s*\{[^}]*$/);
+  
+  if (!lastSectionMatch || lastSectionMatch[1] !== 'scripts') {
+    throw new Error('Current line is not in the "scripts" section of package.json');
+  }
+  
+  // Get the directory containing package.json
+  const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+  const packageDir = getParentDirectoryUri(document.uri);
+  
+  console.log('[Debug Terminal Extension] Running script in directory:', packageDir.fsPath);
+  
+  // Open debug terminal and run the npm script
+  await openJsDebugTerminalWithCwd(packageDir);
+  
+  // Give the terminal a moment to initialize
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // Send the npm run command to the terminal
+  const terminal = vscode.window.activeTerminal;
+  if (terminal) {
+    terminal.sendText(`npm run ${scriptName}`);
+    vscode.window.showInformationMessage(`Running: npm run ${scriptName}`);
+  }
 }
 
 /**
